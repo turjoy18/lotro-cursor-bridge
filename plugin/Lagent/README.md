@@ -2,15 +2,17 @@
 
 In-game mailbox UI for [lotro-cursor-bridge](https://github.com/turjoy18/lotro-cursor-bridge).
 
+**Version:** 0.1.1
+
 ## Install
 
 1. Copy this `Lagent` folder to:
 
    `Documents/The Lord of the Rings Online/Plugins/Lagent/`
 
-2. In LOTRO: **Plugin Manager** → enable **Lagent** (or `/plugins load Lagent` if available).
+2. In LOTRO: **Plugin Manager** → enable **Lagent**.
 
-3. Use `/lagent` to toggle the window.
+3. Use `/lagent` to toggle the window (closing with X only hides it).
 
 ## Milestone 1 controls
 
@@ -22,4 +24,8 @@ In-game mailbox UI for [lotro-cursor-bridge](https://github.com/turjoy18/lotro-c
 | `/lagent ping` | Same as Send ping |
 | `/lagent sync` | Same as Sync |
 
-PluginData scope: **Account** (`LagentOut` / `LagentIn`). Point the Python bridge `--path` at your Account PluginData directory.
+PluginData scope: **Account** (`LagentOut` / `LagentIn`).
+
+Bridge `--path` must be:
+
+`Documents/.../PluginData/<AccountName>/AllServers/`

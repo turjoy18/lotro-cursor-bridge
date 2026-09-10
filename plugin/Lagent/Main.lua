@@ -5,14 +5,13 @@
 import "Turbine"
 import "Turbine.UI"
 import "Turbine.UI.Lotro"
-import "Turbine.Shell"
 
 -- Package-relative loads (same folder as this Main.lua).
 import "Lagent.Mailbox"
 import "Lagent.UI"
 
 Lagent = Lagent or {}
-Lagent.Version = "0.1.0"
+Lagent.Version = "0.1.1"
 
 math.randomseed(math.floor(Turbine.Engine.GetGameTime() * 1000) % 2147483647)
 
@@ -20,10 +19,16 @@ local window = Lagent.CreateWindow()
 Lagent.Window = window
 
 local function toggle()
+	if window == nil then
+		return
+	end
 	window:SetVisible(not window:IsVisible())
 end
 
 local function show()
+	if window == nil then
+		return
+	end
 	window:SetVisible(true)
 end
 

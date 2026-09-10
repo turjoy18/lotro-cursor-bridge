@@ -8,7 +8,14 @@ LOTRO plugins cannot open sockets. The bridge and plugin share two PluginData do
 | Bridge → plugin | `LagentIn` | `LagentIn.plugindata` | Status + replies |
 
 **Scope (M1 plugin):** `Turbine.DataScope.Account`  
-Point `lagent-bridge --path` at the matching Account PluginData directory (see [LOTRO_SETUP.md](LOTRO_SETUP.md)).
+
+On disk that maps to:
+
+```text
+.../PluginData/<AccountName>/AllServers/
+```
+
+Point `lagent-bridge --path` at that **`AllServers`** directory (see [LOTRO_SETUP.md](LOTRO_SETUP.md)). The account root alone is the wrong folder.
 
 ## Outbound (`LagentOut`)
 
