@@ -24,11 +24,15 @@ docs/              Protocol and setup guides
 
 ## Quick start (Milestone 1)
 
-See [docs/LOTRO_SETUP.md](docs/LOTRO_SETUP.md) once published. Summary:
+Full steps and smoke checklist: **[docs/LOTRO_SETUP.md](docs/LOTRO_SETUP.md)**  
+Message format: **[docs/PROTOCOL.md](docs/PROTOCOL.md)**
 
-1. Install the plugin under `Documents/The Lord of the Rings Online/Plugins/`
-2. Run the bridge against your character's PluginData folder
-3. In-game: open Lagent → **Send** (ping) → **Sync** → see pong
+Summary:
+
+1. Copy `plugin/Lagent` → `Documents/The Lord of the Rings Online/Plugins/Lagent/`
+2. `cd bridge && python -m pip install -e .`
+3. Run `lagent-bridge --path <Account PluginData dir> -v`
+4. In-game: `/lagent` → **Send ping** → **Sync** → see pong
 
 ## Contributing
 
