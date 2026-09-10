@@ -31,7 +31,7 @@ Summary:
 
 1. Copy `plugin/Lagent` → `Documents/The Lord of the Rings Online/Plugins/Lagent/`
 2. `cd bridge && python -m pip install -e .`
-3. Run `lagent-bridge --path <Account PluginData dir> -v`
+3. Run `python -m lagent_bridge.main --path <...>/PluginData/<account>/AllServers -v`
 4. In-game: `/lagent` → **Send ping** → **Sync** → see pong
 
 ## Contributing

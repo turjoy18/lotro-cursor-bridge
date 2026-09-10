@@ -13,13 +13,15 @@ python -m pip install -e ".[dev]"
 
 ## Run
 
-Point `--path` at the PluginData folder for your account/server/character (see docs):
+For the stock Lagent plugin (Account scope), point `--path` at **AllServers**:
 
 ```bash
-lagent-bridge --path "$HOME/Documents/The Lord of the Rings Online/PluginData/<account>/<server>/<character>" -v
+python -m lagent_bridge.main --path "C:/Users/<you>/Documents/The Lord of the Rings Online/PluginData/<account>/AllServers" -v
 ```
 
-On Windows (Git Bash / PowerShell), use your real Documents path.
+OneDrive users often have Documents under `.../OneDrive/Documents/...`.
+
+If the `lagent-bridge` script is not on PATH, prefer `python -m lagent_bridge.main`.
 
 Options:
 

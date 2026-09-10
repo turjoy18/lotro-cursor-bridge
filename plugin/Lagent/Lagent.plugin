@@ -3,7 +3,7 @@
 	<Information>
 		<Name>Lagent</Name>
 		<Author>turjoy18</Author>
-		<Version>0.1.0</Version>
+		<Version>0.1.1</Version>
 		<Description>Mailbox UI for lotro-cursor-bridge (Cursor agents without Alt-Tab).</Description>
 	</Information>
 	<Package>Lagent.Main</Package>

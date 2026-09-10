@@ -21,6 +21,14 @@ function Lagent.CreateWindow()
 	window:SetPosition(100, 100)
 	window:SetVisible(false)
 
+	-- X / close must hide only. Destroying the window drops shell command usability.
+	window.Closing = function(sender, args)
+		if args ~= nil then
+			args.Cancel = true
+		end
+		sender:SetVisible(false)
+	end
+
 	local status = Turbine.UI.Label()
 	status:SetParent(window)
 	status:SetPosition(20, 40)

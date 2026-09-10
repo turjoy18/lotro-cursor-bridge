@@ -8,13 +8,15 @@ Plugin install:
 <Documents>/The Lord of the Rings Online/Plugins/Lagent/
 ```
 
-PluginData (Account scope — used by Lagent M1):
+PluginData for **Account** scope (Lagent M1 keys `LagentOut` / `LagentIn`):
 
 ```text
-<Documents>/The Lord of the Rings Online/PluginData/<AccountName>/
+<Documents>/The Lord of the Rings Online/PluginData/<AccountName>/AllServers/
 ```
 
-Character-scoped data (not used by M1 keys, but useful for other plugins) lives under:
+That `AllServers` folder is required. Point the bridge `--path` here — **not** at the account root. If you watch only `PluginData/<AccountName>/`, the game will write the outbox under `AllServers/` and Sync will report no inbox.
+
+Character-scoped data (not used by M1 keys) lives under:
 
 ```text
 .../PluginData/<AccountName>/<ServerName>/<CharacterName>/
@@ -26,7 +28,8 @@ Character-scoped data (not used by M1 keys, but useful for other plugins) lives 
 
 1. Copy the repo’s `plugin/Lagent/` folder into `Plugins/Lagent/` as above (`Lagent.plugin` must sit inside that folder).
 2. At character select or in-game, open **Plugin Manager** and enable **Lagent**.
-3. Confirm chat shows `[Lagent] v0.1.0 loaded — /lagent`.
+3. Confirm chat shows `[Lagent] v0.1.1 loaded — /lagent`.
+4. Closing the window with **X** only hides it — `/lagent` should still reopen it.
 
 ## Install bridge
 
@@ -35,11 +38,13 @@ cd bridge
 python -m pip install -e ".[dev]"
 ```
 
-Run (adjust the path):
+Run (adjust the path; include **AllServers**):
 
 ```bash
-lagent-bridge --path "/c/Users/<you>/Documents/The Lord of the Rings Online/PluginData/<AccountName>" -v
+python -m lagent_bridge.main --path "C:/Users/<you>/Documents/The Lord of the Rings Online/PluginData/<AccountName>/AllServers" -v
 ```
+
+If `lagent-bridge` is not on your PATH, `python -m lagent_bridge.main` is equivalent.
 
 You should see `Watching ...` and an initial `LagentIn.plugindata` written with `bridge = "on"`.
 
@@ -47,33 +52,34 @@ You should see `Watching ...` and an initial `LagentIn.plugindata` written with 
 
 Do this **without** Cursor / API keys.
 
-1. Start `lagent-bridge` with `--path` pointing at your Account PluginData directory.
+1. Start the bridge with `--path` pointing at `PluginData/<AccountName>/AllServers`.
 2. Load **Lagent** in LOTRO (or `/plugins load` if you use that workflow).
 3. `/lagent` — window opens.
 4. Click **Send ping** (or `/lagent ping`).
-5. Wait a few seconds for the client to flush PluginData (saves can be delayed).
+5. Wait a few seconds for the client to flush PluginData (saves can be delayed; OneDrive can add more).
 6. Confirm the bridge log shows `Handled ping id=... -> pong`.
 7. Click **Sync** (or `/lagent sync`).
 8. Status should show `bridge: on` and last reply `[pong] ... — ok`.
+9. Close the window with X, then `/lagent` again — window should reopen.
 
 ### If Sync shows nothing
 
-- Confirm `--path` is the **Account** folder (same place `LagentOut.plugindata` / `LagentIn.plugindata` appear).
+- Confirm `--path` ends in **`AllServers`** (same folder as `LagentOut.plugindata` / `LagentIn.plugindata`).
 - Wait longer after Send; try Sync again.
-- Unload and reload Lagent, then Sync.
+- Unload and reload Lagent, then Sync (client may cache PluginData).
 - Check bridge `-v` logs for parse errors (wrong file encoding / partial write).
 
 ### Offline bridge-only test (no LOTRO)
 
+Use a real Windows path (Git Bash `/tmp` is not visible to Windows Python):
+
 ```bash
-mkdir -p /tmp/lagent-pd
-# write a ping outbox using the bridge encoder, or:
-python -c "from pathlib import Path; from lagent_bridge.protocol import encode_plugindata; Path('/tmp/lagent-pd/LagentOut.plugindata').write_text(encode_plugindata({'id':'req-test','type':'ping','ts':1}), encoding='utf-8')"
-lagent-bridge --path /tmp/lagent-pd --once -v
+PD="C:/Users/<you>/AppData/Local/Temp/lagent-pd"
+mkdir -p "$PD"
+python -c "from pathlib import Path; from lagent_bridge.protocol import encode_plugindata; Path(r'C:/Users/<you>/AppData/Local/Temp/lagent-pd/LagentOut.plugindata').write_text(encode_plugindata({'id':'req-test','type':'ping','ts':1}), encoding='utf-8')"
+python -m lagent_bridge.main --path "C:/Users/<you>/AppData/Local/Temp/lagent-pd" --once -v
 # Inspect LagentIn.plugindata for type=pong
 ```
-
-On Windows, use a temp directory under `%TEMP%` instead of `/tmp`.
 
 ## Next (Milestone 2)
 

@@ -19,7 +19,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--path",
         type=Path,
         required=True,
-        help="Character (or Account) PluginData directory to watch",
+        help="PluginData directory to watch (for Lagent Account scope: .../PluginData/<account>/AllServers)",
     )
     parser.add_argument(
         "--out-name",
