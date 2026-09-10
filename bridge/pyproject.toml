@@ -1,0 +1,26 @@
+[project]
+name = "lagent-bridge"
+version = "0.1.0"
+description = "LOTRO PluginData mailbox bridge for Cursor agents"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "turjoy18" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+cursor = []  # Milestone 2: cursor-sdk
+
+[project.scripts]
+lagent-bridge = "lagent_bridge.main:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
