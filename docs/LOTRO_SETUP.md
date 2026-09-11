@@ -28,8 +28,9 @@ Character-scoped data (not used by M1 keys) lives under:
 
 1. Copy the repo’s `plugin/Lagent/` folder into `Plugins/Lagent/` as above (`Lagent.plugin` must sit inside that folder).
 2. At character select or in-game, open **Plugin Manager** and enable **Lagent**.
-3. Confirm chat shows `[Lagent] v0.1.1 loaded — /lagent`.
+3. Confirm chat shows `[Lagent] v0.1.2 loaded — AddCommand=1 /lagent` (`AddCommand=0` means the slash name did not bind).
 4. Closing the window with **X** only hides it — `/lagent` should still reopen it.
+5. In-world reload: `/plugins manager` (character-select Manage Plugins greys Load/Unload). Or `/plugins unload` then `/plugins load Lagent`.
 
 ## Install bridge
 

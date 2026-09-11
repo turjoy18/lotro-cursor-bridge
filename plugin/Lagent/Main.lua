@@ -11,7 +11,7 @@ import "Lagent.Mailbox"
 import "Lagent.UI"
 
 Lagent = Lagent or {}
-Lagent.Version = "0.1.1"
+Lagent.Version = "0.1.2"
 
 math.randomseed(math.floor(Turbine.Engine.GetGameTime() * 1000) % 2147483647)
 
@@ -32,18 +32,19 @@ local function show()
 	window:SetVisible(true)
 end
 
--- /lagent | /lagent show | /lagent ping | /lagent sync
-local cmd = Turbine.ShellCommand()
+-- Keep ShellCommand on Lagent (not a local). LOTRO AddCommand can fail silently
+-- if the name is stale from a prior load; RemoveCommand first, log the count.
+Lagent.Cmd = Turbine.ShellCommand()
 
-function cmd:GetHelp()
+function Lagent.Cmd:GetHelp()
 	return "Lagent mailbox: /lagent [show|ping|sync]"
 end
 
-function cmd:GetShortHelp()
+function Lagent.Cmd:GetShortHelp()
 	return "Open Lagent or send ping / sync"
 end
 
-function cmd:Execute(command, args)
+function Lagent.Cmd:Execute(command, args)
 	args = args or ""
 	local a = string.lower(string.match(args, "^%s*(%S*)") or "")
 	if a == "" or a == "show" or a == "toggle" then
@@ -82,8 +83,19 @@ function cmd:Execute(command, args)
 	Turbine.Shell.WriteLine("[Lagent] Usage: /lagent [show|ping|sync]")
 end
 
-Turbine.Shell.AddCommand("lagent", cmd)
+pcall(function()
+	Turbine.Shell.RemoveCommand("lagent")
+end)
+local added = Turbine.Shell.AddCommand("lagent", Lagent.Cmd)
+Turbine.Shell.WriteLine(
+	"[Lagent] v" .. Lagent.Version .. " loaded — AddCommand=" .. tostring(added) .. " /lagent"
+)
 
-Turbine.Shell.WriteLine("[Lagent] v" .. Lagent.Version .. " loaded — /lagent")
+plugin.Unload = function()
+	pcall(function()
+		Turbine.Shell.RemoveCommand("lagent")
+	end)
+end
+
 -- Open once on load so players find the panel without Alt-Tab docs.
 show()
