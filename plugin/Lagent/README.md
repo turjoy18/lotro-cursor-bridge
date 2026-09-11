@@ -2,7 +2,7 @@
 
 In-game mailbox UI for [lotro-cursor-bridge](https://github.com/turjoy18/lotro-cursor-bridge).
 
-**Version:** 0.1.1
+**Version:** 0.1.2
 
 ## Install
 
@@ -12,7 +12,7 @@ In-game mailbox UI for [lotro-cursor-bridge](https://github.com/turjoy18/lotro-c
 
 2. In LOTRO: **Plugin Manager** → enable **Lagent**.
 
-3. Use `/lagent` to toggle the window (closing with X only hides it).
+3. Chat should show `AddCommand=1` on load. Use `/lagent` to toggle (X only hides). If `AddCommand=0`, `/plugins unload` then `/plugins load Lagent`.
 
 ## Milestone 1 controls
 
