@@ -2,13 +2,20 @@
 
 Python watcher that reads LOTRO PluginData outbox files and writes inbox replies.
 
-**Milestone 1:** ping/pong mailbox only (no Cursor SDK).
+**Milestone 1:** ping/pong mailbox.  
+**Milestone 2:** local Cursor agents on `type=prompt` via `cursor-sdk`.
 
 ## Install
 
 ```bash
 cd bridge
-python -m pip install -e ".[dev]"
+python -m pip install -e ".[dev,cursor]"
+```
+
+Set a user API key (Dashboard → API Keys) in the shell that runs the bridge:
+
+```bash
+export CURSOR_API_KEY="…"   # never commit this
 ```
 
 ## Run
@@ -16,7 +23,10 @@ python -m pip install -e ".[dev]"
 For the stock Lagent plugin (Account scope), point `--path` at **AllServers**:
 
 ```bash
-python -m lagent_bridge.main --path "C:/Users/<you>/Documents/The Lord of the Rings Online/PluginData/<account>/AllServers" -v
+python -m lagent_bridge.main \
+  --path "C:/Users/<you>/Documents/The Lord of the Rings Online/PluginData/<account>/AllServers" \
+  --cwd "E:/Code/your-workspace" \
+  -v
 ```
 
 OneDrive users often have Documents under `.../OneDrive/Documents/...`.
@@ -25,6 +35,8 @@ If the `lagent-bridge` script is not on PATH, prefer `python -m lagent_bridge.ma
 
 Options:
 
+- `--cwd` — workspace for local agents (`type=prompt`); required for prompts
+- `--model` — optional model id (default `composer-2.5`)
 - `--out-name` / `--in-name` — mailbox filenames (default `LagentOut.plugindata` / `LagentIn.plugindata`)
 - `--interval` — poll seconds (default `1`)
 - `--once` — single poll then exit
@@ -34,5 +46,6 @@ Options:
 
 ```bash
 cd bridge
+python -m pip install -e ".[dev]"
 python -m pytest
 ```

@@ -10,7 +10,7 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
-cursor = []  # Milestone 2: cursor-sdk
+cursor = ["cursor-sdk>=1.0.0"]
 
 [project.scripts]
 lagent-bridge = "lagent_bridge.main:main"

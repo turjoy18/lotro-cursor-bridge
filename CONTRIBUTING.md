@@ -15,8 +15,8 @@ Do **not** commit directly to `main` after the bootstrap commit.
 ## Scope
 
 - Keep PRs small: one issue → one PR
-- Milestone 1 is mailbox-only (no Cursor SDK)
 - Never commit secrets (`CURSOR_API_KEY`, tokens, local absolute paths with credentials)
+- Install bridge extras with `pip install -e ".[dev,cursor]"` when testing prompts
 
 ## Labels
 

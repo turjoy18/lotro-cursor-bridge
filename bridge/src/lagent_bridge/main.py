@@ -13,13 +13,24 @@ from lagent_bridge.watch import MailboxWatcher
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="lagent-bridge",
-        description="Watch LOTRO PluginData mailbox files (Milestone 1: ping/pong).",
+        description="Watch LOTRO PluginData mailbox files (ping/pong + local Cursor prompts).",
     )
     parser.add_argument(
         "--path",
         type=Path,
         required=True,
         help="PluginData directory to watch (for Lagent Account scope: .../PluginData/<account>/AllServers)",
+    )
+    parser.add_argument(
+        "--cwd",
+        type=Path,
+        default=None,
+        help="Workspace for local cursor-sdk agents on type=prompt (required for prompts)",
+    )
+    parser.add_argument(
+        "--model",
+        default=None,
+        help="Cursor model id for local agents (default: composer-2.5)",
     )
     parser.add_argument(
         "--out-name",
@@ -62,11 +73,18 @@ def main(argv: list[str] | None = None) -> None:
         path.mkdir(parents=True, exist_ok=True)
         logging.info("Created watch path %s", path)
 
+    cwd = args.cwd.expanduser().resolve() if args.cwd is not None else None
+    if cwd is not None and not cwd.is_dir():
+        logging.error("--cwd is not a directory: %s", cwd)
+        sys.exit(2)
+
     watcher = MailboxWatcher(
         path,
         out_name=args.out_name,
         in_name=args.in_name,
         poll_interval=args.interval,
+        cwd=cwd,
+        model=args.model,
     )
     if args.once:
         watcher.ensure_inbox()
