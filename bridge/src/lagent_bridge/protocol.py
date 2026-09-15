@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import time
 from dataclasses import dataclass, field
+from collections.abc import Callable
 from typing import Any
 
 
@@ -324,8 +325,17 @@ class InboxState:
         )
 
 
-def handle_request(req: OutRequest, seen_ids: set[str]) -> InReply | None:
-    """Process one outbound request. Returns None if duplicate or unsupported."""
+def handle_request(
+    req: OutRequest,
+    seen_ids: set[str],
+    *,
+    prompt_handler: Callable[[OutRequest], InReply] | None = None,
+) -> InReply | None:
+    """Process one outbound request. Returns None if duplicate or unsupported.
+
+    ``prompt_handler``, when provided, handles ``type=prompt``.
+    Without it, prompt returns a configuration error.
+    """
     if not req.id or req.id in seen_ids:
         return None
     seen_ids.add(req.id)
@@ -333,13 +343,14 @@ def handle_request(req: OutRequest, seen_ids: set[str]) -> InReply | None:
     if req.type == "ping":
         return InReply(id=req.id, type="pong", body="ok", ts=now)
     if req.type == "prompt":
-        # Milestone 2 — acknowledge so Sync still works before Cursor wiring.
-        return InReply(
-            id=req.id,
-            type="error",
-            body="prompt not implemented until Milestone 2",
-            ts=now,
-        )
+        if prompt_handler is None:
+            return InReply(
+                id=req.id,
+                type="error",
+                body="prompt handler not configured (pass --cwd to the bridge)",
+                ts=now,
+            )
+        return prompt_handler(req)
     return InReply(id=req.id, type="error", body=f"unknown type: {req.type}", ts=now)
 
 

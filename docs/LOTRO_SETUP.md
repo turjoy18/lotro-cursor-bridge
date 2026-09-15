@@ -82,6 +82,16 @@ python -m lagent_bridge.main --path "C:/Users/<you>/AppData/Local/Temp/lagent-pd
 # Inspect LagentIn.plugindata for type=pong
 ```
 
-## Next (Milestone 2)
+## Milestone 2 (local prompts)
 
-Local Cursor agents on `type = "prompt"` — see issues labeled milestone **M2: Local Cursor agent**. Do not put API keys in the repo.
+```bash
+cd bridge
+python -m pip install -e ".[dev,cursor]"
+export CURSOR_API_KEY="…"   # user key from https://cursor.com/dashboard/api — never commit
+python -m lagent_bridge.main \
+  --path ".../PluginData/<account>/AllServers" \
+  --cwd "/path/to/workspace" \
+  -v
+```
+
+Send prompt in-game → wait for bridge → **Sync**. Inbox `replies` get `type=result` (capped body); `sessions` hold `agentId` / status. Do not put API keys in the repo.
