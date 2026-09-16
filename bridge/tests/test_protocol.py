@@ -147,6 +147,33 @@ def test_prompt_sdk_error_writes_session(tmp_path: Path, monkeypatch: pytest.Mon
     assert any(s.get("reqId") == "req-p3" and s.get("status") == "error" for s in sessions)
 
 
+def test_expand_bridge_command_cmd(tmp_path: Path) -> None:
+    from lagent_bridge.agent import PromptError, expand_bridge_command
+
+    bin_dir = tmp_path / "bridge" / "bin"
+    dist_bin = tmp_path / "bridge" / "dist" / "bin"
+    bin_dir.mkdir(parents=True)
+    dist_bin.mkdir(parents=True)
+    cmd = bin_dir / "cursor-sdk-bridge.cmd"
+    node = bin_dir / "node.exe"
+    js = dist_bin / "cursor-sdk-bridge.js"
+    cmd.write_text("@echo off\n", encoding="utf-8")
+    node.write_bytes(b"MZ")
+    js.write_text("// bridge", encoding="utf-8")
+
+    argv = expand_bridge_command(cmd)
+    assert argv == [str(node), str(js)]
+
+    plain = tmp_path / "cursor-sdk-bridge"
+    plain.write_text("#!/bin/sh\n", encoding="utf-8")
+    assert expand_bridge_command(plain) == [str(plain)]
+
+    with pytest.raises(PromptError, match="node.exe missing"):
+        empty = tmp_path / "empty"
+        empty.mkdir()
+        expand_bridge_command(empty / "cursor-sdk-bridge.cmd")
+
+
 def test_run_local_prompt_create_send(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("CURSOR_API_KEY", "k")
     cwd = tmp_path / "repo"
@@ -207,8 +234,10 @@ def test_run_local_prompt_async_uses_async_client(
 
     fake_client = object()
     created: list[object] = []
+    launched: list[object] = []
 
-    async def launch_bridge(**_k: object) -> FakeClientCM:
+    async def launch_bridge(*, command: object = None, **_k: object) -> FakeClientCM:
+        launched.append(command)
         return FakeClientCM(fake_client)
 
     async def create(_options: object, *, client: object) -> FakeAgent:
@@ -234,6 +263,9 @@ def test_run_local_prompt_async_uses_async_client(
     import lagent_bridge.agent as agent_mod
 
     importlib.reload(agent_mod)
+    monkeypatch.setattr(
+        agent_mod, "resolve_bridge_launch_command", lambda: ["node.exe", "bridge.js"]
+    )
     try:
         out = agent_mod.run_local_prompt("hi", cwd=cwd)
     finally:
@@ -243,3 +275,5 @@ def test_run_local_prompt_async_uses_async_client(
     assert out.status == "finished"
     assert out.text == "done"
     assert created == [fake_client]
+    assert launched == [["node.exe", "bridge.js"]]
+

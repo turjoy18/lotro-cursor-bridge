@@ -42,7 +42,7 @@ Options:
 - `--once` — single poll then exit
 - `-v` — debug logs
 
-Bridge package version: **0.1.1**. Local prompts use the **async** `cursor-sdk` client (sync `Agent.create` hits WinError 10038 on native Windows).
+Bridge package version: **0.1.2**. Local prompts use the **async** `cursor-sdk` client; on Windows the bridge is launched as `node.exe` + `cursor-sdk-bridge.js` (not the `.cmd` wrapper).
 
 ## Tests
 

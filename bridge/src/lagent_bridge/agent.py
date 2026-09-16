@@ -3,6 +3,10 @@
 Uses the async SDK client on purpose: sync ``Agent.create`` /
 ``Bridge.launch`` hits WinError 10038 on native Windows (select on pipes).
 See https://forum.cursor.com/t/170001
+
+On Windows, also expand ``cursor-sdk-bridge.cmd`` to ``node.exe`` + the
+bridge ``.js`` so asyncio ``create_subprocess_exec`` can spawn a real
+executable (``.cmd`` alone times out on discovery).
 """
 
 from __future__ import annotations
@@ -10,6 +14,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -48,6 +53,43 @@ def require_api_key() -> str:
             "and export it in the bridge process environment."
         )
     return key
+
+
+def expand_bridge_command(launcher: str | Path) -> list[str]:
+    """Turn a bridge launcher path into argv safe for ``create_subprocess_exec``.
+
+    Windows wheels ship ``cursor-sdk-bridge.cmd`` which only wraps:
+    ``node.exe …/cursor-sdk-bridge.js``. Spawning the ``.cmd`` directly via
+    asyncio often never yields the discovery line; invoke node+js instead.
+    """
+    path = Path(launcher)
+    if path.suffix.lower() != ".cmd":
+        return [str(path)]
+
+    node = path.with_name("node.exe")
+    # .cmd lives in …/bridge/bin/; js is …/bridge/dist/bin/cursor-sdk-bridge.js
+    js = path.parent.parent / "dist" / "bin" / "cursor-sdk-bridge.js"
+    if not node.is_file():
+        raise PromptError(f"cursor-sdk bridge node.exe missing next to launcher: {node}")
+    if not js.is_file():
+        raise PromptError(f"cursor-sdk bridge script missing: {js}")
+    return [str(node), str(js)]
+
+
+def resolve_bridge_launch_command() -> list[str]:
+    """Resolve bundled bridge launcher and expand Windows ``.cmd`` if needed."""
+    try:
+        from cursor_sdk._vendor import resolve_bridge_path
+    except ImportError as exc:
+        raise PromptError(
+            'cursor-sdk not installed; run: pip install -e ".[cursor]"'
+        ) from exc
+
+    launcher = resolve_bridge_path()
+    cmd = expand_bridge_command(launcher)
+    if sys.platform == "win32" and len(cmd) > 1:
+        log.debug("Launching cursor-sdk-bridge via node+js: %s", cmd)
+    return cmd
 
 
 def run_local_prompt(
@@ -113,9 +155,13 @@ async def _run_local_prompt_async(
         model=model,
         local=local,
     )
+    bridge_cmd = resolve_bridge_launch_command()
 
     try:
-        async with await AsyncClient.launch_bridge(workspace=str(workdir)) as client:
+        async with await AsyncClient.launch_bridge(
+            command=bridge_cmd,
+            workspace=str(workdir),
+        ) as client:
             if agent_id:
                 agent = await AsyncAgent.resume(agent_id, options, client=client)
             else:

@@ -96,4 +96,4 @@ python -m lagent_bridge.main \
 
 Send prompt in-game → wait for bridge → **Sync**. Inbox `replies` get `type=result` (capped body); `sessions` hold `agentId` / status. Do not put API keys in the repo.
 
-Bridge **0.1.1+** uses the async SDK path so native Windows is not blocked by WinError 10038 on sync bridge discovery.
+Bridge **0.1.2+** uses the async SDK path and launches the Windows bridge via `node.exe` + JS (avoids WinError 10038 and `.cmd` discovery timeouts).
