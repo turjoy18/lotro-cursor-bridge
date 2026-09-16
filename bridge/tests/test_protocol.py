@@ -152,31 +152,94 @@ def test_run_local_prompt_create_send(tmp_path: Path, monkeypatch: pytest.Monkey
     cwd = tmp_path / "repo"
     cwd.mkdir()
 
+    outcome = PromptOutcome(agent_id="agent-1", status="finished", text="done")
+
+    async def fake_async(*_a: object, **_k: object) -> PromptOutcome:
+        return outcome
+
+    with patch("lagent_bridge.agent._run_local_prompt_async", side_effect=fake_async):
+        from lagent_bridge.agent import run_local_prompt
+
+        out = run_local_prompt("hi", cwd=cwd)
+
+    assert out.agent_id == "agent-1"
+    assert out.status == "finished"
+    assert out.text == "done"
+
+
+def test_run_local_prompt_async_uses_async_client(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Ensure we launch AsyncClient (Windows-safe path), not sync Agent.create."""
+    import importlib
+    import sys
+
+    monkeypatch.setenv("CURSOR_API_KEY", "k")
+    cwd = tmp_path / "repo"
+    cwd.mkdir()
+
     fake_result = MagicMock()
     fake_result.status = "finished"
     fake_result.result = "done"
 
-    fake_run = MagicMock()
-    fake_run.wait.return_value = fake_result
+    class FakeRun:
+        async def wait(self) -> MagicMock:
+            return fake_result
 
-    fake_agent = MagicMock()
-    fake_agent.agent_id = "agent-1"
-    fake_agent.send.return_value = fake_run
+    class FakeAgent:
+        agent_id = "agent-1"
 
-    fake_mod = MagicMock()
-    fake_mod.Agent.create.return_value = fake_agent
-    fake_mod.AgentOptions = MagicMock(side_effect=lambda **kw: kw)
-    fake_mod.LocalAgentOptions = MagicMock(side_effect=lambda **kw: kw)
+        async def send(self, _msg: str) -> FakeRun:
+            return FakeRun()
 
-    import sys
+        async def close(self) -> None:
+            return None
 
-    monkeypatch.setitem(sys.modules, "cursor_sdk", fake_mod)
+    class FakeClientCM:
+        def __init__(self, client: object) -> None:
+            self._client = client
 
-    from lagent_bridge.agent import run_local_prompt
+        async def __aenter__(self) -> object:
+            return self._client
 
-    out = run_local_prompt("hi", cwd=cwd)
+        async def __aexit__(self, *_a: object) -> None:
+            return None
+
+    fake_client = object()
+    created: list[object] = []
+
+    async def launch_bridge(**_k: object) -> FakeClientCM:
+        return FakeClientCM(fake_client)
+
+    async def create(_options: object, *, client: object) -> FakeAgent:
+        assert client is fake_client
+        created.append(client)
+        return FakeAgent()
+
+    async def resume(_id: str, _options: object, *, client: object) -> FakeAgent:
+        raise AssertionError("resume should not be called")
+
+    fake_asyncio_mod = MagicMock()
+    fake_asyncio_mod.AsyncClient.launch_bridge = staticmethod(launch_bridge)
+    fake_asyncio_mod.AsyncAgent.create = staticmethod(create)
+    fake_asyncio_mod.AsyncAgent.resume = staticmethod(resume)
+
+    fake_sdk = MagicMock()
+    fake_sdk.AgentOptions = MagicMock(side_effect=lambda **kw: kw)
+    fake_sdk.LocalAgentOptions = MagicMock(side_effect=lambda **kw: kw)
+
+    monkeypatch.setitem(sys.modules, "cursor_sdk", fake_sdk)
+    monkeypatch.setitem(sys.modules, "cursor_sdk.asyncio", fake_asyncio_mod)
+
+    import lagent_bridge.agent as agent_mod
+
+    importlib.reload(agent_mod)
+    try:
+        out = agent_mod.run_local_prompt("hi", cwd=cwd)
+    finally:
+        importlib.reload(agent_mod)
+
     assert out.agent_id == "agent-1"
     assert out.status == "finished"
     assert out.text == "done"
-    fake_mod.Agent.create.assert_called_once()
-    fake_agent.close.assert_called_once()
+    assert created == [fake_client]

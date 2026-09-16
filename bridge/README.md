@@ -42,6 +42,8 @@ Options:
 - `--once` — single poll then exit
 - `-v` — debug logs
 
+Bridge package version: **0.1.1**. Local prompts use the **async** `cursor-sdk` client (sync `Agent.create` hits WinError 10038 on native Windows).
+
 ## Tests
 
 ```bash

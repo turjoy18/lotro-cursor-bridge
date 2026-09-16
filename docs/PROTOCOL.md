@@ -56,7 +56,7 @@ Single request table (M1 writes one request at a time):
 }
 ```
 
-**Prompt path (bridge):** `CURSOR_API_KEY` in the process env + `--cwd` workspace. Local `cursor-sdk` create/send (or resume when `agentId` set). Ping/pong unchanged.
+**Prompt path (bridge):** `CURSOR_API_KEY` in the process env + `--cwd` workspace. Local `cursor-sdk` via **async** `AsyncClient.launch_bridge` + create/send (or resume when `agentId` set) — required on native Windows. Ping/pong unchanged.
 
 ## File format
 
