@@ -24,10 +24,10 @@ Single request table (M1 writes one request at a time):
 ```lua
 {
   id = "req-1234-5678",   -- required, unique; bridge ignores duplicates
-  type = "ping",          -- "ping" | "prompt" (prompt handled in M2)
+  type = "ping",          -- "ping" | "prompt"
   text = "optional",      -- used for prompt
   ts = 123456,            -- optional ordering hint
-  agentId = "optional",   -- M2 follow-up
+  agentId = "optional",   -- resume existing local agent (follow-up)
 }
 ```
 
@@ -40,15 +40,23 @@ Single request table (M1 writes one request at a time):
   replies = {
     [1] = {
       id = "req-1234-5678",
-      type = "pong",      -- "pong" | "error" | (M2) agent summary types
-      body = "ok",
+      type = "pong",      -- "pong" | "result" | "error"
+      body = "ok",        -- agent text capped (~8k) with …[truncated]
       ts = 1234567890,
     },
   },
-  sessions = {            -- empty in M1; filled in M2
+  sessions = {
+    [1] = {
+      agentId = "agent-…",
+      reqId = "req-…",
+      status = "running", -- "running" | "finished" | "error" | …
+      updatedAt = 1234567890,
+    },
   },
 }
 ```
+
+**Prompt path (bridge):** `CURSOR_API_KEY` in the process env + `--cwd` workspace. Local `cursor-sdk` via **async** `AsyncClient.launch_bridge` (Windows: `node.exe` + bridge `.js`, not `.cmd`) + create/send (or resume when `agentId` set). Ping/pong unchanged.
 
 ## File format
 
