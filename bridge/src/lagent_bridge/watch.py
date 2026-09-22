@@ -6,8 +6,11 @@ import logging
 import time
 from pathlib import Path
 
+from lagent_bridge.agent import PromptError, run_local_prompt, truncate_body
 from lagent_bridge.protocol import (
     InboxState,
+    InReply,
+    OutRequest,
     as_dict,
     decode_plugindata,
     encode_plugindata,
@@ -19,6 +22,7 @@ log = logging.getLogger(__name__)
 
 DEFAULT_OUT_NAME = "LagentOut.plugindata"
 DEFAULT_IN_NAME = "LagentIn.plugindata"
+MAX_SESSIONS = 10
 
 
 class MailboxWatcher:
@@ -29,11 +33,15 @@ class MailboxWatcher:
         out_name: str = DEFAULT_OUT_NAME,
         in_name: str = DEFAULT_IN_NAME,
         poll_interval: float = 1.0,
+        cwd: Path | None = None,
+        model: str | None = None,
     ) -> None:
         self.path = path
         self.out_path = path / out_name
         self.in_path = path / in_name
         self.poll_interval = poll_interval
+        self.cwd = cwd
+        self.model = model
         self.seen_ids: set[str] = set()
         self._last_out_mtime: float | None = None
         self.inbox = InboxState(bridge="on")
@@ -61,6 +69,82 @@ class MailboxWatcher:
         tmp.replace(self.in_path)
         log.debug("Wrote inbox %s", self.in_path)
 
+    def upsert_session(self, session: dict) -> None:
+        """Replace existing session with same agentId/reqId, else append (capped)."""
+        agent_id = str(session.get("agentId") or "")
+        req_id = str(session.get("reqId") or "")
+        sessions = list(self.inbox.sessions)
+        replaced = False
+        for i, existing in enumerate(sessions):
+            same_agent = agent_id and str(existing.get("agentId") or "") == agent_id
+            same_req = req_id and str(existing.get("reqId") or "") == req_id
+            if same_agent or same_req:
+                sessions[i] = {**existing, **session}
+                replaced = True
+                break
+        if not replaced:
+            sessions.append(session)
+        self.inbox.sessions = sessions[-MAX_SESSIONS:]
+
+    def handle_prompt(self, req: OutRequest) -> InReply:
+        now = int(time.time())
+        if self.cwd is None:
+            return InReply(
+                id=req.id,
+                type="error",
+                body="prompt requires --cwd (local agent workspace)",
+                ts=now,
+            )
+
+        self.upsert_session(
+            {
+                "agentId": req.agent_id or "",
+                "reqId": req.id,
+                "status": "running",
+                "updatedAt": now,
+            }
+        )
+        self.write_inbox()
+
+        try:
+            kwargs: dict = {
+                "cwd": self.cwd,
+                "agent_id": req.agent_id,
+            }
+            if self.model:
+                kwargs["model"] = self.model
+            outcome = run_local_prompt(req.text or "", **kwargs)
+        except PromptError as exc:
+            self.upsert_session(
+                {
+                    "agentId": req.agent_id or "",
+                    "reqId": req.id,
+                    "status": "error",
+                    "updatedAt": int(time.time()),
+                }
+            )
+            return InReply(id=req.id, type="error", body=truncate_body(str(exc)), ts=now)
+
+        done_at = int(time.time())
+        status = outcome.status if outcome.status else "error"
+        self.upsert_session(
+            {
+                "agentId": outcome.agent_id,
+                "reqId": req.id,
+                "status": status,
+                "updatedAt": done_at,
+            }
+        )
+        body = truncate_body(outcome.text or "")
+        if status == "finished":
+            return InReply(id=req.id, type="result", body=body, ts=done_at)
+        return InReply(
+            id=req.id,
+            type="error",
+            body=body or f"agent status: {status}",
+            ts=done_at,
+        )
+
     def poll_once(self) -> int:
         """Process outbox if changed. Returns number of new replies."""
         if not self.out_path.exists():
@@ -78,7 +162,7 @@ class MailboxWatcher:
         requests = extract_requests(parsed)
         added = 0
         for req in requests:
-            reply = handle_request(req, self.seen_ids)
+            reply = handle_request(req, self.seen_ids, prompt_handler=self.handle_prompt)
             if reply is None:
                 continue
             self.inbox.replies.append(reply)
@@ -94,6 +178,8 @@ class MailboxWatcher:
     def run_forever(self) -> None:
         self.ensure_inbox()
         log.info("Watching %s (out=%s in=%s)", self.path, self.out_path.name, self.in_path.name)
+        if self.cwd is not None:
+            log.info("Local agent cwd=%s", self.cwd)
         while True:
             try:
                 self.poll_once()
