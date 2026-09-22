@@ -22,6 +22,7 @@ Thumbs.db
 # Local secrets / machine paths
 .env.local
 *.local.json
+config.local.toml
 bridge/config.local.toml
 
 # Cursor

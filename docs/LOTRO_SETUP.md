@@ -87,12 +87,14 @@ python -m lagent_bridge.main --path "C:/Users/<you>/AppData/Local/Temp/lagent-pd
 ```bash
 cd bridge
 python -m pip install -e ".[dev,cursor]"
-export CURSOR_API_KEY="…"   # user key from https://cursor.com/dashboard/api — never commit
+export CURSOR_API_KEY="…"   # or copy config.example.toml → config.local.toml — never commit the key
 python -m lagent_bridge.main \
   --path ".../PluginData/<account>/AllServers" \
   --cwd "/path/to/workspace" \
   -v
 ```
+
+Key setup (env, PowerShell, local file, gitignore): [API_KEY.md](API_KEY.md).
 
 Send prompt in-game → wait for bridge → **Sync**. Inbox `replies` get `type=result` (capped body); the session list shows `running` / `finished` / `error`. Click a row, type the next prompt, **Follow up** (outbox includes that `agentId`). **Send prompt** always starts a new agent. Still Sync-only — no live stream. Do not put API keys in the repo.
 
