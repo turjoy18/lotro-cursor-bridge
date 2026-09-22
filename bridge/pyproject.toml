@@ -1,6 +1,6 @@
 [project]
 name = "lagent-bridge"
-version = "0.1.2"
+version = "0.1.3"
 description = "LOTRO PluginData mailbox bridge for Cursor agents"
 readme = "README.md"
 requires-python = ">=3.11"

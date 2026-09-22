@@ -12,10 +12,11 @@ cd bridge
 python -m pip install -e ".[dev,cursor]"
 ```
 
-Set a user API key (Dashboard → API Keys) in the shell that runs the bridge:
+Set a user API key in the shell that runs the bridge, or in gitignored `bridge/config.local.toml`. Full steps: [docs/API_KEY.md](../docs/API_KEY.md).
 
 ```bash
 export CURSOR_API_KEY="…"   # never commit this
+# or: cp config.example.toml config.local.toml  (from this directory) and edit it
 ```
 
 ## Run
@@ -42,7 +43,7 @@ Options:
 - `--once` — single poll then exit
 - `-v` — debug logs
 
-Bridge package version: **0.1.2**. Local prompts use the **async** `cursor-sdk` client; on Windows the bridge is launched as `node.exe` + `cursor-sdk-bridge.js` (not the `.cmd` wrapper).
+Bridge package version: **0.1.3**. Local prompts use the **async** `cursor-sdk` client; on Windows the bridge is launched as `node.exe` + `cursor-sdk-bridge.js` (not the `.cmd` wrapper). `CURSOR_API_KEY` comes from the environment, or from a gitignored `config.local.toml` / `.env` when the env var is unset.
 
 ## Tests
 

@@ -1,0 +1,5 @@
+# Copy to config.local.toml (gitignored) in this folder, or export CURSOR_API_KEY.
+# Mint a user API key: https://cursor.com/dashboard/api
+# Leave this example empty. Never commit a real key.
+
+CURSOR_API_KEY = ""
