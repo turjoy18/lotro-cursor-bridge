@@ -11,7 +11,7 @@ import "Lagent.Mailbox"
 import "Lagent.UI"
 
 Lagent = Lagent or {}
-Lagent.Version = "0.1.2"
+Lagent.Version = "0.1.3"
 
 math.randomseed(math.floor(Turbine.Engine.GetGameTime() * 1000) % 2147483647)
 
@@ -75,6 +75,18 @@ function Lagent.Cmd:Execute(command, args)
 			if latest ~= nil then
 				Turbine.Shell.WriteLine(
 					"[Lagent] last=" .. tostring(latest.type) .. " " .. tostring(latest.body)
+				)
+			end
+			local sessions = Lagent.Mailbox.Sessions(data)
+			Turbine.Shell.WriteLine("[Lagent] sessions=" .. tostring(#sessions))
+			for i, s in ipairs(sessions) do
+				Turbine.Shell.WriteLine(
+					string.format(
+						"[Lagent]  %d [%s] %s",
+						i,
+						tostring(s.status),
+						tostring(s.agentId)
+					)
 				)
 			end
 		end)

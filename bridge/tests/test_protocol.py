@@ -125,6 +125,38 @@ def test_prompt_runs_agent_and_sessions(tmp_path: Path, monkeypatch: pytest.Monk
     )
 
 
+def test_prompt_followup_passes_agent_id(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CURSOR_API_KEY", "test-key")
+    cwd = tmp_path / "ws"
+    cwd.mkdir()
+    watcher = MailboxWatcher(tmp_path, poll_interval=0.1, cwd=cwd)
+    outcome = PromptOutcome(agent_id="agent-abc", status="finished", text="continued")
+
+    with patch("lagent_bridge.watch.run_local_prompt", return_value=outcome) as mock_run:
+        watcher.ensure_inbox()
+        out = encode_plugindata(
+            {
+                "id": "req-p4",
+                "type": "prompt",
+                "text": "continue",
+                "ts": 4,
+                "agentId": "agent-abc",
+            }
+        )
+        watcher.out_path.write_text(out, encoding="utf-8")
+        assert watcher.poll_once() == 1
+        assert mock_run.call_args.args[0] == "continue"
+        assert mock_run.call_args.kwargs["agent_id"] == "agent-abc"
+
+    inbox = decode_plugindata(watcher.in_path.read_text(encoding="utf-8"))
+    reply = next(r for r in inbox["replies"] if r["id"] == "req-p4")
+    assert reply["type"] == "result"
+    assert reply["body"] == "continued"
+    assert any(
+        s.get("agentId") == "agent-abc" and s.get("status") == "finished" for s in inbox["sessions"]
+    )
+
+
 def test_prompt_sdk_error_writes_session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("CURSOR_API_KEY", "test-key")
     cwd = tmp_path / "ws"
