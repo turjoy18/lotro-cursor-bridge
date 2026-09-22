@@ -67,6 +67,38 @@ function Mailbox.MakePrompt(text, agentId)
 	return req
 end
 
+function Mailbox.Sessions(inbox)
+	-- Newest first. Handles Lua arrays and map-style tables from PluginData.
+	if inbox == nil or type(inbox.sessions) ~= "table" then
+		return {}
+	end
+	local raw = inbox.sessions
+	local out = {}
+	local function push(s)
+		if type(s) == "table" and (s.agentId ~= nil or s.status ~= nil or s.reqId ~= nil) then
+			table.insert(out, s)
+		end
+	end
+	if #raw > 0 then
+		for i = 1, #raw do
+			push(raw[i])
+		end
+	else
+		for _, s in pairs(raw) do
+			push(s)
+		end
+	end
+	table.sort(out, function(a, b)
+		local ta = tonumber(a.updatedAt) or 0
+		local tb = tonumber(b.updatedAt) or 0
+		if ta == tb then
+			return tostring(a.reqId or "") > tostring(b.reqId or "")
+		end
+		return ta > tb
+	end)
+	return out
+end
+
 function Mailbox.LatestReply(inbox)
 	if inbox == nil or inbox.replies == nil then
 		return nil

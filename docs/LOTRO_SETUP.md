@@ -28,7 +28,7 @@ Character-scoped data (not used by M1 keys) lives under:
 
 1. Copy the repo’s `plugin/Lagent/` folder into `Plugins/Lagent/` as above (`Lagent.plugin` must sit inside that folder).
 2. At character select or in-game, open **Plugin Manager** and enable **Lagent**.
-3. Confirm chat shows `[Lagent] v0.1.2 loaded — AddCommand=1 /lagent` (`AddCommand=0` means the slash name did not bind).
+3. Confirm chat shows `[Lagent] v0.1.3 loaded — AddCommand=1 /lagent` (`AddCommand=0` means the slash name did not bind).
 4. Closing the window with **X** only hides it — `/lagent` should still reopen it.
 5. In-world reload: `/plugins manager` (character-select Manage Plugins greys Load/Unload). Or `/plugins unload` then `/plugins load Lagent`.
 
@@ -94,6 +94,6 @@ python -m lagent_bridge.main \
   -v
 ```
 
-Send prompt in-game → wait for bridge → **Sync**. Inbox `replies` get `type=result` (capped body); `sessions` hold `agentId` / status. Do not put API keys in the repo.
+Send prompt in-game → wait for bridge → **Sync**. Inbox `replies` get `type=result` (capped body); the session list shows `running` / `finished` / `error`. Click a row, type the next prompt, **Follow up** (outbox includes that `agentId`). **Send prompt** always starts a new agent. Still Sync-only — no live stream. Do not put API keys in the repo.
 
 Bridge **0.1.2+** uses the async SDK path and launches the Windows bridge via `node.exe` + JS (avoids WinError 10038 and `.cmd` discovery timeouts).

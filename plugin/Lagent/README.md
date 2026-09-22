@@ -2,7 +2,7 @@
 
 In-game mailbox UI for [lotro-cursor-bridge](https://github.com/turjoy18/lotro-cursor-bridge).
 
-**Version:** 0.1.2
+**Version:** 0.1.3
 
 ## Install
 
@@ -14,15 +14,18 @@ In-game mailbox UI for [lotro-cursor-bridge](https://github.com/turjoy18/lotro-c
 
 3. Chat should show `AddCommand=1` on load. Use `/lagent` to toggle (X only hides). If `AddCommand=0`, `/plugins unload` then `/plugins load Lagent`.
 
-## Milestone 1 controls
+## Controls
 
 | Control | Action |
 |---------|--------|
 | **Send ping** | Writes `LagentOut` with `type=ping` |
-| **Sync** | Loads `LagentIn` and shows bridge status + last reply |
-| **Send prompt** | Writes a `prompt` request (handled in Milestone 2) |
+| **Sync** | Loads `LagentIn`: bridge status, last reply, session list |
+| **Send prompt** | New `prompt` (no `agentId`) |
+| **Follow up** | Same prompt text, plus the clicked session’s `agentId` |
 | `/lagent ping` | Same as Send ping |
-| `/lagent sync` | Same as Sync |
+| `/lagent sync` | Same as Sync (also prints sessions in chat) |
+
+There is no live stream. Send, wait for the bridge, then Sync. Session rows come from inbox `sessions` (`running` / `finished` / `error`). Follow up does nothing until a row with an `agentId` is selected.
 
 PluginData scope: **Account** (`LagentOut` / `LagentIn`).
 
